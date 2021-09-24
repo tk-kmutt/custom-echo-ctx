@@ -37,6 +37,14 @@ func (c *Context) BindValidate(i interface{}) error {
 	return nil
 }
 
+type callFunc func(c *Context) error
+
+func c(h callFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		return h(c.(*Context))
+	}
+}
+
 func main() {
 	e := echo.New()
 	e.Validator = &Validator{validator: validator.New()}
@@ -48,16 +56,14 @@ func main() {
 		}
 	})
 
-	e.POST("/post_profile", func(c echo.Context) error {
-		cc := c.(*Context) // キャスト
-
+	e.POST("/post_profile", c(func(c *Context) error {
 		u := new(User)
-		if err := cc.BindValidate(u); err != nil {
+		if err := c.BindValidate(u); err != nil {
 			return err
 		}
 		fmt.Println(u)
-		return cc.String(http.StatusOK, "OK")
-	})
+		return c.String(http.StatusOK, "OK")
+	}))
 
 	// Start server
 	e.Logger.Fatal(e.Start(":3000"))
