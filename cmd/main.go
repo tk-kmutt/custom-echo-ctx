@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/labstack/echo"
-	validator "gopkg.in/go-playground/validator.v9"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 type User struct {
@@ -21,13 +22,30 @@ func (v *Validator) Validate(i interface{}) error {
 	return v.validator.Struct(i)
 }
 
+// Context
 // echo.Context をラップする構造体を定義する
 type Context struct {
 	echo.Context
 }
 
+// BindValidate
 // Bind と Validate を合わせたメソッド
 func (c *Context) BindValidate(i interface{}) error {
+	if err := c.Bind(i); err != nil {
+		return c.String(http.StatusBadRequest, "Request is failed: "+err.Error())
+	}
+	if err := c.Validate(i); err != nil {
+		return c.String(http.StatusBadRequest, "Validate is failed: "+err.Error())
+	}
+	return nil
+}
+
+// LogBindValidate
+// Log とBind と Validate を合わせたメソッド
+// funcを生やす練習
+func (c *Context) LogBindValidate(i interface{}) error {
+	c.Logger().Print("=====")
+
 	if err := c.Bind(i); err != nil {
 		return c.String(http.StatusBadRequest, "Request is failed: "+err.Error())
 	}
@@ -47,6 +65,9 @@ func c(h callFunc) echo.HandlerFunc {
 
 func main() {
 	e := echo.New()
+	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Format: "method=${method}, uri=${uri}, status=${status}\n",
+	}))
 	e.Validator = &Validator{validator: validator.New()}
 
 	// echo.Context をラップして扱うために middleware として登録する
@@ -58,7 +79,7 @@ func main() {
 
 	e.POST("/post_profile", c(func(c *Context) error {
 		u := new(User)
-		if err := c.BindValidate(u); err != nil {
+		if err := c.LogBindValidate(u); err != nil {
 			return err
 		}
 		fmt.Println(u)
