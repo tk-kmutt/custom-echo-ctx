@@ -36,42 +36,11 @@ func main() {
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "method=${method}, uri=${uri}, status=${status}\n",
 	}))
+
+	// echo validator
 	e.Validator = &mv.Validator{Validator: validator.New()}
 
-	// mysql connection
-	dsn := "user:pass@tcp(127.0.0.1:3306)/cec?charset=utf8mb4&parseTime=True&loc=Local"
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	if err != nil {
-		panic(err.Error())
-	}
-	if err := db.AutoMigrate(&repository.User{}); err != nil {
-		panic(err.Error())
-	}
-
-	// echo.Context をラップして扱うために middleware として登録する
-	e.Use(func(h echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			return h(&mc.Context{
-				Context: c,
-				User: &mc.Auth{
-					Name:  "john",
-					Email: "john@cayto.jp",
-				},
-				DB: db,
-			})
-		}
-	})
-
-	e.POST("/post_profile", mc.Wrap(func(c *mc.Context) error {
-		u := new(AlpacaUser)
-		if err := c.LogBindValidate(u); err != nil {
-			return err
-		}
-		fmt.Println(u)
-		return c.String(http.StatusOK, "OK")
-	}))
-
-	// validator
+	// openAPI validator
 	spec, err := gen.GetSwagger()
 	if err != nil {
 		panic(err)
@@ -86,8 +55,47 @@ func main() {
 		if h[0] != "Bearer super_strong_password" {
 			return errors.New("auth failed")
 		}
+		//TODO ここにverify
+
+		input.RequestValidationInput.Request.Header["auth"] = []string{"john", "doe", "john@cayto.jp"}
 		return nil
 	}
+
+	// mysql connection
+	dsn := "user:pass@tcp(127.0.0.1:3306)/cec?charset=utf8mb4&parseTime=True&loc=Local"
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		panic(err.Error())
+	}
+	if err := db.AutoMigrate(&repository.User{}); err != nil {
+		panic(err.Error())
+	}
+
+	// echo.Context をラップして扱うために middleware として登録する
+	e.Use(func(h echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			auth := c.Request().Header.Get("Authorization")
+			//TODO authをuser情報に変換する
+			return h(&mc.Context{
+				Context: c,
+				DB:      db,
+				Auth: &mc.Auth{
+					Name:  auth,
+					Email: "",
+				},
+			})
+		}
+	})
+
+	e.POST("/post_profile", mc.Wrap(func(c *mc.Context) error {
+		u := new(AlpacaUser)
+		if err := c.LogBindValidate(u); err != nil {
+			return err
+		}
+		fmt.Println(u)
+		return c.String(http.StatusOK, "OK")
+	}))
+
 	oapi := e.Group("")
 	oapi.Use(om.OapiRequestValidatorWithOptions(spec, validatorOptions))
 	gen.RegisterHandlers(oapi, api.NewApi())

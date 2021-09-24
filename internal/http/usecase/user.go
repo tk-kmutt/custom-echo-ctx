@@ -31,7 +31,7 @@ var signingKey = []byte("secret")
 //}
 
 func (p *User) Signup(c *context.Context) error {
-	c.Logger().Print(c.User)
+	c.Logger().Print(c.Auth)
 	// リクエストを取得
 	user := new(gen.User)
 	if err := c.Bind(user); err != nil {

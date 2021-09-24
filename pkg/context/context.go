@@ -12,7 +12,7 @@ import (
 // echo.Context をラップする構造体を定義する
 type Context struct {
 	echo.Context
-	User *Auth
+	Auth *Auth
 	DB   *gorm.DB
 }
 
@@ -32,7 +32,7 @@ func (c *Context) BindValidate(i interface{}) error {
 // Log とBind と Validate を合わせたメソッド
 // funcを生やす練習
 func (c *Context) LogBindValidate(i interface{}) error {
-	c.Logger().Print(c.User)
+	c.Logger().Print(c.Auth)
 
 	if err := c.Bind(i); err != nil {
 		return c.String(http.StatusBadRequest, "Request is failed: "+err.Error())
