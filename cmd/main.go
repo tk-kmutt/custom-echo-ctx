@@ -21,20 +21,42 @@ func (v *Validator) Validate(i interface{}) error {
 	return v.validator.Struct(i)
 }
 
+// echo.Context をラップする構造体を定義する
+type Context struct {
+	echo.Context
+}
+
+// Bind と Validate を合わせたメソッド
+func (c *Context) BindValidate(i interface{}) error {
+	if err := c.Bind(i); err != nil {
+		return c.String(http.StatusBadRequest, "Request is failed: "+err.Error())
+	}
+	if err := c.Validate(i); err != nil {
+		return c.String(http.StatusBadRequest, "Validate is failed: "+err.Error())
+	}
+	return nil
+}
+
 func main() {
 	e := echo.New()
 	e.Validator = &Validator{validator: validator.New()}
 
-	e.POST("/post_profile", func(c echo.Context) error {
-		u := new(User)
-		if err := c.Bind(u); err != nil {
-			return c.String(http.StatusBadRequest, "Request is failed: "+err.Error())
+	// echo.Context をラップして扱うために middleware として登録する
+	e.Use(func(h echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			return h(&Context{c})
 		}
-		if err := c.Validate(u); err != nil {
-			return c.String(http.StatusBadRequest, "Validate is failed: "+err.Error())
+	})
+
+	e.POST("/post_profile", func(c echo.Context) error {
+		cc := c.(*Context) // キャスト
+
+		u := new(User)
+		if err := cc.BindValidate(u); err != nil {
+			return err
 		}
 		fmt.Println(u)
-		return c.String(http.StatusOK, "OK")
+		return cc.String(http.StatusOK, "OK")
 	})
 
 	// Start server
