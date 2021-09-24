@@ -10,10 +10,10 @@ mod:
 	go mod verify
 	go mod download
 
-
 install-oapi-codegen:
 	go get -u github.com/deepmap/oapi-codegen/cmd/oapi-codegen
 
 oapi-codegen:
-	oapi-codegen -generate "types" -package gen twitterCloneApi.yaml > ./internal/http/gen/model.go
-	oapi-codegen -generate "server,spec" -package gen twitterCloneApi.yaml > ./internal/http/gen/server.go
+	mkdir -p internal/http/gen
+	oapi-codegen -generate "types" -package gen openapi.yaml > ./internal/http/gen/model.go
+	oapi-codegen -generate "server,spec" -package gen openapi.yaml > ./internal/http/gen/server.go

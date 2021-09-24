@@ -9,7 +9,7 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
-type User struct {
+type AlpacaUser struct {
 	Name  string `json:"name" form:"name" query:"name" validate:"required"`
 	Email string `json:"email" form:"email" query:"email" validate:"required"`
 }
@@ -26,7 +26,7 @@ func (v *Validator) Validate(i interface{}) error {
 // echo.Context をラップする構造体を定義する
 type Context struct {
 	echo.Context
-	user *User
+	user *AlpacaUser
 }
 
 // BindValidate
@@ -77,7 +77,7 @@ func main() {
 
 			return h(&Context{
 				Context: c,
-				user: &User{
+				user: &AlpacaUser{
 					Name:  "john",
 					Email: "john@cayto.jp",
 				},
@@ -86,7 +86,7 @@ func main() {
 	})
 
 	e.POST("/post_profile", c(func(c *Context) error {
-		u := new(User)
+		u := new(AlpacaUser)
 		if err := c.LogBindValidate(u); err != nil {
 			return err
 		}

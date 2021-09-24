@@ -1,19 +1,12 @@
 version: "3"
 
 services:
-  # MySQL
-  db:
-    image: mysql:5.7
-    container_name: twitterCloneApi-mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: twitterCloneApi
-      MYSQL_USER: docker
-      MYSQL_PASSWORD: docker
-      TZ: "Asia/Tokyo"
-    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    volumes:
-      - ./docker/db/data:/var/lib/mysql
-      - ./docker/db/my.cnf:/etc/mysql/conf.d/my.cnf
+  swagger-ui:
+    image: pentusha/swagger-ui-crossbuild
+    container_name: "swagger-ui"
     ports:
-      - 3306:3306
+      - "8001:8080"
+    volumes:
+      - ./openapi.yaml:/openapi.yaml
+    environment:
+      SWAGGER_JSON: /openapi.yaml

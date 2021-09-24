@@ -1,13 +1,17 @@
 openapi: "3.0.0"
 info:
   version: 1.0.0
-  title: twitterCloneApi
-  description: Twitter Clone API
+  title: custom-echo-ctx
+  description: custom-echo-ctx
 paths:
   /signup:
     post:
       description: userの新規登録
       operationId: signup
+#      security:
+#        #これをつけるとswagger uiの鍵マークが反応しなくなる
+#        #ただwarningがでるので好ましくない
+#        -
       requestBody:
         description: 登録するユーザーの情報
         required: true
@@ -57,6 +61,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 components:
+  #これをつけるとswagger uiの上部にAuthorize🔓がついてtokenをいじれる
+  securitySchemes:
+    bearerAuth:            # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT    # optional, arbitrary value for documentation purposes
   schemas:
     user:
       type: object
@@ -85,3 +95,6 @@ components:
           format: int32
         message:
           type: string
+security:
+  #これをつけると各PathにAuthorize🔓がついてtokenをいじれる
+  - bearerAuth: []         # use the same name as above
