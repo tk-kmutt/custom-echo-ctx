@@ -1,4 +1,4 @@
-package ctx
+package context
 
 type Auth struct {
 	Name  string

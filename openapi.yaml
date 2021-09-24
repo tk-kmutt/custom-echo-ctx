@@ -61,12 +61,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 components:
-  #これをつけるとswagger uiの上部にAuthorize🔓がついてtokenをいじれる
-  securitySchemes:
-    bearerAuth:            # arbitrary name for the security scheme
-      type: http
-      scheme: bearer
-      bearerFormat: JWT    # optional, arbitrary value for documentation purposes
+#  #これをつけるとswagger uiの上部にAuthorize🔓がついてtokenをいじれる
+#  securitySchemes:
+#    bearerAuth:            # arbitrary name for the security scheme
+#      type: http
+#      scheme: bearer
+#      bearerFormat: JWT    # optional, arbitrary value for documentation purposes
   schemas:
     user:
       type: object
@@ -95,6 +95,6 @@ components:
           format: int32
         message:
           type: string
-security:
-  #これをつけると各PathにAuthorize🔓がついてtokenをいじれる
-  - bearerAuth: []         # use the same name as above
+#security:
+#  #これをつけると各PathにAuthorize🔓がついてtokenをいじれる
+#  - bearerAuth: []         # use the same name as above

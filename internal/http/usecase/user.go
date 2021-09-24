@@ -3,11 +3,11 @@ package usecase
 import (
 	"custom-echo-ctx/infra/mysql/repository"
 	"custom-echo-ctx/internal/http/gen"
+	"custom-echo-ctx/pkg/context"
 	"net/http"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 )
 
@@ -34,7 +34,8 @@ var signingKey = []byte("secret")
 //	SigningKey: signingKey,
 //}
 
-func (p *User) Signup(c echo.Context) error {
+func (p *User) Signup(c *context.Context) error {
+	c.Logger().Print(c.User)
 	// リクエストを取得
 	user := new(gen.User)
 	if err := c.Bind(user); err != nil {
@@ -53,7 +54,7 @@ func (p *User) Signup(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
-func (p *User) Login(c echo.Context) error {
+func (p *User) Login(c *context.Context) error {
 	// リクエストを取得
 	user := new(gen.User)
 	if err := c.Bind(user); err != nil {

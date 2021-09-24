@@ -12,7 +12,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
-	mc "custom-echo-ctx/pkg/ctx"
+	mc "custom-echo-ctx/pkg/context"
 	mv "custom-echo-ctx/pkg/validator"
 
 	"github.com/labstack/echo/v4"
@@ -57,7 +57,7 @@ func main() {
 	}
 
 	basic := e.Group("")
-	oapi := e.Group("/oapi")
+	oapi := e.Group("")
 
 	basic.POST("/post_profile", mc.Wrap(func(c *mc.Context) error {
 		u := new(AlpacaUser)
