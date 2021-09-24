@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo"
-	validator "gopkg.in/go-playground/validator.v9"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 type User struct {
@@ -21,11 +21,13 @@ func (v *Validator) Validate(i interface{}) error {
 	return v.validator.Struct(i)
 }
 
+// Context
 // echo.Context をラップする構造体を定義する
 type Context struct {
 	echo.Context
 }
 
+// BindValidate
 // Bind と Validate を合わせたメソッド
 func (c *Context) BindValidate(i interface{}) error {
 	if err := c.Bind(i); err != nil {
