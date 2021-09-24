@@ -1,8 +1,16 @@
 package main
 
 import (
+	"custom-echo-ctx/infra/mysql/repository"
+	api "custom-echo-ctx/internal/http"
+	"custom-echo-ctx/internal/http/gen"
 	"fmt"
 	"net/http"
+
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+
+	om "github.com/deepmap/oapi-codegen/pkg/middleware"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -66,15 +74,23 @@ func c(h callFunc) echo.HandlerFunc {
 
 func main() {
 	e := echo.New()
+	e.Use(middleware.RequestID())
+	e.Use(middleware.Recover())
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "method=${method}, uri=${uri}, status=${status}\n",
 	}))
 	e.Validator = &Validator{validator: validator.New()}
 
+	// validator
+	spec, err := gen.GetSwagger()
+	if err != nil {
+		panic(err)
+	}
+	e.Use(om.OapiRequestValidator(spec))
+
 	// echo.Context をラップして扱うために middleware として登録する
 	e.Use(func(h echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-
 			return h(&Context{
 				Context: c,
 				user: &AlpacaUser{
@@ -85,6 +101,16 @@ func main() {
 		}
 	})
 
+	// mysql connection
+	dsn := "user:pass@tcp(127.0.0.1:3306)/cec?charset=utf8mb4&parseTime=True&loc=Local"
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		panic(err.Error())
+	}
+	if err := db.AutoMigrate(&repository.User{}); err != nil {
+		panic(err.Error())
+	}
+
 	e.POST("/post_profile", c(func(c *Context) error {
 		u := new(AlpacaUser)
 		if err := c.LogBindValidate(u); err != nil {
@@ -93,7 +119,7 @@ func main() {
 		fmt.Println(u)
 		return c.String(http.StatusOK, "OK")
 	}))
+	gen.RegisterHandlers(e, api.NewApi(db))
 
-	// Start server
 	e.Logger.Fatal(e.Start(":3000"))
 }
