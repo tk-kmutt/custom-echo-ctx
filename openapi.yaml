@@ -4,7 +4,7 @@ info:
   title: custom-echo-ctx
   description: custom-echo-ctx
 paths:
-  /signup:
+  /oapi/signup:
     post:
       description: userの新規登録
       operationId: signup
@@ -32,7 +32,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /login:
+  /oapi/login:
     post:
       description: userのログイン
       operationId: login
