@@ -26,6 +26,7 @@ func (v *Validator) Validate(i interface{}) error {
 // echo.Context をラップする構造体を定義する
 type Context struct {
 	echo.Context
+	user *User
 }
 
 // BindValidate
@@ -44,7 +45,7 @@ func (c *Context) BindValidate(i interface{}) error {
 // Log とBind と Validate を合わせたメソッド
 // funcを生やす練習
 func (c *Context) LogBindValidate(i interface{}) error {
-	c.Logger().Print("=====")
+	c.Logger().Print(c.user)
 
 	if err := c.Bind(i); err != nil {
 		return c.String(http.StatusBadRequest, "Request is failed: "+err.Error())
@@ -73,7 +74,14 @@ func main() {
 	// echo.Context をラップして扱うために middleware として登録する
 	e.Use(func(h echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			return h(&Context{c})
+
+			return h(&Context{
+				Context: c,
+				user: &User{
+					Name:  "john",
+					Email: "john@cayto.jp",
+				},
+			})
 		}
 	})
 
