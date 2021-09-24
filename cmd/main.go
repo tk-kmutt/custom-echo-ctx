@@ -1,18 +1,22 @@
 package main
 
 import (
+	"context"
 	"custom-echo-ctx/infra/mysql/repository"
 	api "custom-echo-ctx/internal/http"
 	"custom-echo-ctx/internal/http/gen"
+	"errors"
 	"fmt"
 	"net/http"
+
+	"github.com/getkin/kin-openapi/openapi3filter"
 
 	om "github.com/deepmap/oapi-codegen/pkg/middleware"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
-	mc "custom-echo-ctx/pkg/ctx"
+	mc "custom-echo-ctx/pkg/context"
 	mv "custom-echo-ctx/pkg/validator"
 
 	"github.com/labstack/echo/v4"
@@ -56,10 +60,9 @@ func main() {
 		panic(err.Error())
 	}
 
-	basic := e.Group("")
-	oapi := e.Group("/oapi")
+	oapi := e.Group("")
 
-	basic.POST("/post_profile", mc.Wrap(func(c *mc.Context) error {
+	e.POST("/post_profile", mc.Wrap(func(c *mc.Context) error {
 		u := new(AlpacaUser)
 		if err := c.LogBindValidate(u); err != nil {
 			return err
@@ -73,7 +76,21 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	oapi.Use(om.OapiRequestValidator(spec))
+	validatorOptions := &om.Options{}
+	validatorOptions.Options.AuthenticationFunc = func(c context.Context, input *openapi3filter.AuthenticationInput) error {
+		fmt.Printf("%+v\n", input)
+		h := input.RequestValidationInput.Request.Header["Authorization"]
+		if h == nil {
+			return errors.New("auth failed")
+		}
+		fmt.Printf("%+v\n", h)
+
+		if h[0] != "Bearer super_strong_password" {
+			return errors.New("auth failed")
+		}
+		return nil
+	}
+	oapi.Use(om.OapiRequestValidatorWithOptions(spec, validatorOptions))
 	gen.RegisterHandlers(oapi, api.NewApi(db))
 
 	e.Logger.Fatal(e.Start(":3000"))

@@ -8,10 +8,7 @@ paths:
     post:
       description: userの新規登録
       operationId: signup
-#      security:
-#        #これをつけるとswagger uiの鍵マークが反応しなくなる
-#        #ただwarningがでるので好ましくない
-#        -
+      security: []
       requestBody:
         description: 登録するユーザーの情報
         required: true
