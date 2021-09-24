@@ -8,17 +8,13 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"gorm.io/gorm"
 )
 
 type User struct {
-	db *gorm.DB
 }
 
-func NewUser(db *gorm.DB) *User {
-	return &User{
-		db: db,
-	}
+func NewUser() *User {
+	return &User{}
 }
 
 type jwtCustomClaims struct {
@@ -42,7 +38,7 @@ func (p *User) Signup(c *context.Context) error {
 		return sendError(c, http.StatusBadRequest, "Invalid format")
 	}
 
-	tx := p.db.Create(&repository.User{
+	tx := c.DB.Create(&repository.User{
 		Name:     user.Name,
 		Password: user.Password,
 	})
@@ -62,7 +58,7 @@ func (p *User) Login(c *context.Context) error {
 	}
 
 	u := new(repository.User)
-	p.db.Where("name = ?", user.Name).First(&u)
+	c.DB.Where("name = ?", user.Name).First(&u)
 	if u.ID == "" || u.Password != user.Password {
 		return sendError(c, http.StatusUnauthorized, "Invalid name or password")
 	}

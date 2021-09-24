@@ -9,12 +9,12 @@ import (
 	"fmt"
 	"net/http"
 
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+
 	"github.com/getkin/kin-openapi/openapi3filter"
 
 	om "github.com/deepmap/oapi-codegen/pkg/middleware"
-
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 
 	mc "custom-echo-ctx/pkg/context"
 	mv "custom-echo-ctx/pkg/validator"
@@ -37,18 +37,6 @@ func main() {
 		Format: "method=${method}, uri=${uri}, status=${status}\n",
 	}))
 	e.Validator = &mv.Validator{Validator: validator.New()}
-	// echo.Context をラップして扱うために middleware として登録する
-	e.Use(func(h echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			return h(&mc.Context{
-				Context: c,
-				User: &mc.Auth{
-					Name:  "john",
-					Email: "john@cayto.jp",
-				},
-			})
-		}
-	})
 
 	// mysql connection
 	dsn := "user:pass@tcp(127.0.0.1:3306)/cec?charset=utf8mb4&parseTime=True&loc=Local"
@@ -60,7 +48,19 @@ func main() {
 		panic(err.Error())
 	}
 
-	oapi := e.Group("")
+	// echo.Context をラップして扱うために middleware として登録する
+	e.Use(func(h echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			return h(&mc.Context{
+				Context: c,
+				User: &mc.Auth{
+					Name:  "john",
+					Email: "john@cayto.jp",
+				},
+				DB: db,
+			})
+		}
+	})
 
 	e.POST("/post_profile", mc.Wrap(func(c *mc.Context) error {
 		u := new(AlpacaUser)
@@ -78,20 +78,19 @@ func main() {
 	}
 	validatorOptions := &om.Options{}
 	validatorOptions.Options.AuthenticationFunc = func(c context.Context, input *openapi3filter.AuthenticationInput) error {
-		fmt.Printf("%+v\n", input)
 		h := input.RequestValidationInput.Request.Header["Authorization"]
 		if h == nil {
 			return errors.New("auth failed")
 		}
-		fmt.Printf("%+v\n", h)
 
 		if h[0] != "Bearer super_strong_password" {
 			return errors.New("auth failed")
 		}
 		return nil
 	}
+	oapi := e.Group("")
 	oapi.Use(om.OapiRequestValidatorWithOptions(spec, validatorOptions))
-	gen.RegisterHandlers(oapi, api.NewApi(db))
+	gen.RegisterHandlers(oapi, api.NewApi())
 
 	e.Logger.Fatal(e.Start(":3000"))
 }

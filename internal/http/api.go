@@ -6,7 +6,6 @@ import (
 	"custom-echo-ctx/pkg/context"
 
 	"github.com/labstack/echo/v4"
-	"gorm.io/gorm"
 )
 
 type Api struct {
@@ -17,8 +16,8 @@ func wrap(h func(c *context.Context) error, c echo.Context) error {
 	return h(c.(*context.Context))
 }
 
-func NewApi(db *gorm.DB) *Api {
-	return &Api{user: usecase.NewUser(db)}
+func NewApi() *Api {
+	return &Api{user: usecase.NewUser()}
 }
 
 var _ gen.ServerInterface = (*Api)(nil)

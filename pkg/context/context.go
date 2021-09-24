@@ -3,6 +3,8 @@ package context
 import (
 	"net/http"
 
+	"gorm.io/gorm"
+
 	"github.com/labstack/echo/v4"
 )
 
@@ -11,6 +13,7 @@ import (
 type Context struct {
 	echo.Context
 	User *Auth
+	DB   *gorm.DB
 }
 
 // BindValidate
