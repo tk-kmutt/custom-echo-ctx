@@ -1,6 +1,7 @@
 package context
 
 import (
+	"custom-echo-ctx/pkg/jwt"
 	"net/http"
 
 	"gorm.io/gorm"
@@ -12,7 +13,7 @@ import (
 // echo.Context をラップする構造体を定義する
 type Context struct {
 	echo.Context
-	Auth *Auth
+	Auth *jwt.LoginUser
 	DB   *gorm.DB
 }
 
