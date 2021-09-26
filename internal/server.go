@@ -5,6 +5,7 @@ import (
 	"custom-echo-ctx/infra/mysql/repository"
 	api "custom-echo-ctx/internal/http"
 	"custom-echo-ctx/internal/http/gen"
+	"custom-echo-ctx/pkg/jwt"
 	"errors"
 	"fmt"
 	"net/http"
@@ -60,7 +61,7 @@ func (r *Server) Run() {
 		return func(c echo.Context) error {
 			return h(&mc.Context{
 				Context: c,
-				Auth: &mc.Auth{
+				Auth: &jwt.LoginUser{
 					Name:  "john",
 					Email: "john@cayto.jp",
 				},
