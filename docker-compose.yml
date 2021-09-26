@@ -3,7 +3,7 @@ version: "3"
 services:
   swagger-ui:
     image: pentusha/swagger-ui-crossbuild
-    container_name: cec-swagger-ui
+    container_name: demo-swagger-ui
     ports:
       - "8001:8080"
     volumes:
@@ -12,10 +12,10 @@ services:
       SWAGGER_JSON: /openapi.yaml
   db:
     image: mysql:5.7
-    container_name: cec-mysql
+    container_name: demo-mysql
     environment:
       MYSQL_ROOT_PASSWORD: pass
-      MYSQL_DATABASE: cec
+      MYSQL_DATABASE: demo
       MYSQL_USER: user
       MYSQL_PASSWORD: pass
       TZ: "Asia/Tokyo"

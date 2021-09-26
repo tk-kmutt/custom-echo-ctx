@@ -46,7 +46,7 @@ func (r *Server) Run() {
 	e.Validator = &mv.Validator{Validator: validator.New()}
 
 	// mysql connection
-	dsn := "user:pass@tcp(127.0.0.1:3306)/cec?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := "user:pass@tcp(127.0.0.1:3306)/demo?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic(err.Error())

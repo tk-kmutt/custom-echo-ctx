@@ -20,5 +20,5 @@ oapi-codegen:
 
 install-wire:
 	go get github.com/google/wire/cmd/wire
-wire-cec:
-	go run github.com/google/wire/cmd/wire ./cmd/cec/...
+wire-demo:
+	go run github.com/google/wire/cmd/wire ./cmd/demo/...
