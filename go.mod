@@ -9,6 +9,7 @@ require (
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/google/uuid v1.3.0
+	github.com/google/wire v0.5.0
 	github.com/labstack/echo/v4 v4.6.0
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
