@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"context"
@@ -24,42 +24,26 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+type Server struct {
+}
+
+func NewServer() *Server {
+	return &Server{}
+}
+
 type AlpacaUser struct {
 	Name  string `json:"name" form:"name" query:"name" validate:"required"`
 	Email string `json:"email" form:"email" query:"email" validate:"required"`
 }
 
-func main() {
+func (r *Server) Run() {
 	e := echo.New()
 	e.Use(middleware.RequestID())
 	e.Use(middleware.Recover())
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "method=${method}, uri=${uri}, status=${status}\n",
 	}))
-
-	// echo validator
 	e.Validator = &mv.Validator{Validator: validator.New()}
-
-	// openAPI validator
-	spec, err := gen.GetSwagger()
-	if err != nil {
-		panic(err)
-	}
-	validatorOptions := &om.Options{}
-	validatorOptions.Options.AuthenticationFunc = func(c context.Context, input *openapi3filter.AuthenticationInput) error {
-		h := input.RequestValidationInput.Request.Header["Authorization"]
-		if h == nil {
-			return errors.New("auth failed")
-		}
-
-		if h[0] != "Bearer super_strong_password" {
-			return errors.New("auth failed")
-		}
-		//TODO ここにverify
-
-		input.RequestValidationInput.Request.Header["auth"] = []string{"john", "doe", "john@cayto.jp"}
-		return nil
-	}
 
 	// mysql connection
 	dsn := "user:pass@tcp(127.0.0.1:3306)/cec?charset=utf8mb4&parseTime=True&loc=Local"
@@ -74,15 +58,13 @@ func main() {
 	// echo.Context をラップして扱うために middleware として登録する
 	e.Use(func(h echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			auth := c.Request().Header.Get("Authorization")
-			//TODO authをuser情報に変換する
 			return h(&mc.Context{
 				Context: c,
-				DB:      db,
 				Auth: &mc.Auth{
-					Name:  auth,
-					Email: "",
+					Name:  "john",
+					Email: "john@cayto.jp",
 				},
+				DB: db,
 			})
 		}
 	})
@@ -96,6 +78,23 @@ func main() {
 		return c.String(http.StatusOK, "OK")
 	}))
 
+	// validator
+	spec, err := gen.GetSwagger()
+	if err != nil {
+		panic(err)
+	}
+	validatorOptions := &om.Options{}
+	validatorOptions.Options.AuthenticationFunc = func(c context.Context, input *openapi3filter.AuthenticationInput) error {
+		h := input.RequestValidationInput.Request.Header["Authorization"]
+		if h == nil {
+			return errors.New("auth failed")
+		}
+
+		if h[0] != "Bearer super_strong_password" {
+			return errors.New("auth failed")
+		}
+		return nil
+	}
 	oapi := e.Group("")
 	oapi.Use(om.OapiRequestValidatorWithOptions(spec, validatorOptions))
 	gen.RegisterHandlers(oapi, api.NewApi())
